@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <conio.h>
+#include <windows.h>
 
 #define BUFFER_LENGTH 255
 
@@ -22,6 +23,8 @@
 // save file as .csv as it ediable on excel if exist
 #define INVENTORY_FILE "inventory.csv"
 #define RECEIPT_FILE "receipt.csv"
+
+#define MAX_ITEMS 100
 
 typedef struct inventory {
     char name[BUFFER_LENGTH];
@@ -47,23 +50,30 @@ void adminMainMenu(void);
 void adminInsertInventory(void);
 void adminRestockInventory(void);
 void adminShowSales(void);
+void showInventory(void);
 
 // customer related functions declarations
 void customerMainMenu(void);
 void customerOrders(void);
-void customerOrderSelection(float *total_price);
-int customerAddToCart(float **total_price);
-void showInventory(void);
+void customerOrderSelection(int *cart);
+int customerAddToCart(int **cart);
 
-inventory inventory_list[100]; // max 100 items
+// utility functions declarations
+void createConsoleWindow(short width);
+
+inventory inventory_list[MAX_ITEMS]; // max 100 items
 receipt receipt_list[200]; // max 200 receipts [transaction]
 
 int inventory_count = 0; // number of exist items in inventory
 int receipt_count = 0; // number of exist receipts in receipt
 
 int main() {
+    createConsoleWindow(85); // create console window with 85 columns
+    createConsoleWindow(85); // make sure it is 85 columns
     system("cls");
     int flag = 0; // if 1 then go to admin mode
+
+    // create file if not exist
     if( (access(INVENTORY_FILE, F_OK) != 0) || (access(RECEIPT_FILE, F_OK) != 0) ) {
 
         // create inventory file
@@ -97,21 +107,8 @@ int main() {
 
 // customer functions start ---------------------------------------------------
 
-void showInventory(){
-    printf("|-------------------------------------------------------------------|" BR);
-    printf("| id |        item_name                |     price     |  quantity  |" BR);
-    printf("|-------------------------------------------------------------------|" BR);
-    for(int i = 0; i < inventory_count; i++){
-        if (inventory_list[i].quantity <= 5) {
-            printf("| %-2d |"RED" %-31s "RST"| RM %-10.2f |   %5d    |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity);
-            continue;
-        }
-        printf("| %-2d | %-31s | RM %-10.2f |   %5d    |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity);
-    }
-    printf("|-------------------------------------------------------------------|" BR);
-}
-
 void customerMainMenu(){
+    system("cls");
     printf("\t\t\t    Restaurant De'Frencher" BR BR);
     printf("\t        created by " BLUE "Mr. Farez, Mr. Adam " RST "and" BLUE " Mr. Afiq" RST BR BR);
     printf("---------------------------------- Main Menu ---------------------------------" BR BR);
@@ -126,9 +123,10 @@ void customerMainMenu(){
 
     switch(input){
         case 1:
-            // not available forever
+            // not available forever and ever and after the end of the world
             break;
         case 2:
+            system("cls");
             customerOrders();
             break;
         case 3:
@@ -144,44 +142,89 @@ void customerMainMenu(){
 
 void customerOrders(){
     float payment = 0;
-    customerOrderSelection(&payment);
+    int cart_list[MAX_ITEMS]; // max 100 items in cart
+    for (int i = 0; i < MAX_ITEMS; i++) cart_list[i] = 0; // initialize cart list to 0
+    customerOrderSelection(&cart_list[0]);
     float tax;
+
+    printf("\t\t\t    Restaurant De'Frencher" BR BR);
+    printf("\t        created by " BLUE "Mr. Farez, Mr. Adam " RST "and" BLUE " Mr. Afiq" RST BR BR);
+
+    // print cart
+    printf("\t|-------------------------------------------------|" BR);
+    printf("\t|           item_name             |     total     |" BR);
+    printf("\t|-------------------------------------------------|" BR);
+    for(int i = 0; i < inventory_count; i++){
+        if (cart_list[i] == 0) continue;
+
+        // calculate total price of each item
+        float calculated_price = (float)cart_list[i] * inventory_list[i].price;
+
+        // add sum of total price of each item to payment
+        payment += calculated_price;
+        
+        // update file with new quantity
+        updateInventory(i, inventory_list[i].quantity, inventory_count);
+
+        printf("\t| %-31s | RM %-10.2f |" BR, inventory_list[i].name, calculated_price);
+    }
+    printf("\t|-------------------------------------------------|" BR);
+    
     tax = payment * 0.06; // 6% tax
     insertReceipt((float)(payment + tax), &receipt_count); // insert receipt into receipt file
 
-    printf("\t\t\t    Restaurant De'Frencher" BR BR);
-    printf("\t        created by " BLUE "Mr. Farez, Mr. Adam " RST "and" BLUE " Mr. Afiq" RST BR BR);
-    printf("---------------------------------- Order ---------------------------------" BR BR);
+    printf("\t| %-31s |    %-10d |" BR, "your resit id", receipt_list[receipt_count-1].receipt_number);
+    printf("\t|-------------------------------------------------|" BR);
+    printf("\t| %-31s | RM %-10.2f |" BR, "payment", payment);
+    printf("\t| %-31s | RM %-10.2f |" BR, "6% sst", tax);
+    printf("\t| %-31s | RM %-10.2f |" BR, "total payment", payment + tax);
+    printf("\t|-------------------------------------------------|" BR);
 
-    printf("total payment: %.2f" BR, payment);
-    printf("tax: %.2f" BR BR, tax);
-    printf("thank you for your order" BR BR);
     getch();
 }
 
-void customerOrderSelection(float *total_price){
+void customerOrderSelection(int *cart_list){
     printf("\t\t\t    Restaurant De'Frencher" BR BR);
     printf("\t        created by " BLUE "Mr. Farez, Mr. Adam " RST "and" BLUE " Mr. Afiq" RST BR BR);
-    printf("---------------------------------- Menu ---------------------------------" BR BR);
-    showInventory();
+    printf("---------------------------------- Menu -------------------------------" BR BR);
+    // show inventory
+    printf("|--------------------------------------------------------------------------------|" BR);
+    printf("| id |        item_name                |     price     |  available  |  in cart  |" BR);
+    printf("|--------------------------------------------------------------------------------|" BR);
+    for(int i = 0; i < inventory_count; i++){
+        if (inventory_list[i].quantity <= 3) {
+            if (cart_list[i] > 0)
+                printf("| %-2d |"RED" %-31s "RST"| RM %-10.2f |   %6d    |"RST BLUE"  %6d   "RST"|" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity, cart_list[i]);
+            else
+                printf("| %-2d |"RED" %-31s "RST"| RM %-10.2f |   %6d    |  %6d   |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity, cart_list[i]);
+            continue;
+        }
+        if (cart_list[i] > 0)
+                printf("| %-2d |"RED" %-31s "RST"| RM %-10.2f |   %6d    |"RST BLUE"  %6d   "RST"|" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity, cart_list[i]);
+        else
+            printf("| %-2d | %-31s | RM %-10.2f |   %6d    |  %6d   |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity, cart_list[i]);
+    }
+    printf("|--------------------------------------------------------------------------------|" BR);
 
-    printf("\t[1] add to cart" BR);
-    printf("\t[2] checkout" BR);
+    printf("\t[a] add to cart" BR);
+    printf("\t[b] checkout" BR);
     
+    // error handling. only accept input 'a' or 'b' only
     int input;
-    do {input = getch() - '0';} while (input > 2 || input <= 0);
+    do {input = getch() - 'a';} while (input > 1 || input < 0);
     switch (input) {
-        case 1:
+        case 0:
             // add to cart
-            int result = customerAddToCart(&total_price);
+            int result = customerAddToCart(&cart_list);
             if (result == 1) printf(BR GREEN "Successfully added to cart" RST BR BR);
+            else if (result == 2) printf(BR YELLOW "added to cart, but using cap amount of stock" RST BR BR);
             else if (result == -1) printf(BR RED "Failed to add to cart" RST BR BR);
             else if (result == 0) printf(BR RED "run out off stock" RST BR BR);
             getch();
             system("cls");
-            customerOrderSelection(total_price);
+            customerOrderSelection(cart_list);
             break;
-        case 2:
+        case 1:
             // checkout
             system("cls");
             return;
@@ -189,25 +232,28 @@ void customerOrderSelection(float *total_price){
     }
 }
 
-int customerAddToCart(float **total_price){
-    int inventory_id; int quantity;
-    printf( BR "menu id :"); scanf("%d", &inventory_id);
-    printf("quantity :"); scanf("%d", &quantity);
-    
+int customerAddToCart(int **cart_list){
+    int inventory_id; int quantity; int FLAG = 1;
+    printf( BR CYAN "\tmenu id :"); scanf("%d", &inventory_id);
+    printf("\tquantity :"); scanf("%d", &quantity);
+    printf(RST);
     if (inventory_id < 0 || inventory_id >= inventory_count) return -1; // error handling
     
     if (quantity < 0) quantity = 1; // if negative quantity, set to 1
     
-    if (quantity > inventory_list[inventory_id].quantity)
+    if (quantity > inventory_list[inventory_id].quantity){
         quantity = inventory_list[inventory_id].quantity; // if quantity exceed the stock, set to stock
-    
+        FLAG = 2;
+    }
     if (quantity == 0) return 0; // if quantity is 0, return 0
+
+    // update cart list
+    (*cart_list)[inventory_id] += quantity;
+
+    // update inventory without changing the original inventory file
+    inventory_list[inventory_id].quantity -= quantity;
     
-    **total_price += inventory_list[inventory_id].price * (float)quantity; // update total price
-    quantity = 0 - quantity; // set quantity to negative to indicate it's a cart item
-    updateInventory(inventory_id, quantity, inventory_count);
-    
-    return 1;
+    return FLAG;
 }
 
 // customer functions end -----------------------------------------------------
@@ -215,6 +261,20 @@ int customerAddToCart(float **total_price){
 
 
 // admin functions start ------------------------------------------------------
+void showInventory(){
+    printf("|-------------------------------------------------------------------|" BR);
+    printf("| id |        item_name                |     price     |  quantity  |" BR);
+    printf("|-------------------------------------------------------------------|" BR);
+    for(int i = 0; i < inventory_count; i++){
+        if (inventory_list[i].quantity <= 5) {
+            printf("| %-2d |"RED" %-31s "RST"| RM %-10.2f |   %5d    |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity);
+            continue;
+        }
+        printf("| %-2d | %-31s | RM %-10.2f |   %5d    |" BR, i, inventory_list[i].name, inventory_list[i].price, inventory_list[i].quantity);
+    }
+    printf("|-------------------------------------------------------------------|" BR);
+}
+
 
 void insertDefaultInventory(FILE **fp) {
     // predefined menu name
@@ -434,3 +494,24 @@ int updateInventory(int inventory_id, int change_quantity, int count){
 }
 
 // file I/O realted functions end ---------------------------------------------------
+
+
+// windows related functions start ------------------------------------------------
+
+void createConsoleWindow(short width){
+    HANDLE wHnd;    // Handle to write to the console. (using windows api)
+    // Set up the handles for writing:
+    wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
+    HWND consoleWindow = GetConsoleWindow();
+
+    SMALL_RECT windowSize = {0 , 0 , width, 30}; // window size
+    COORD coord = {width + 1, 60}; // buffer size
+    SetConsoleWindowInfo(wHnd, TRUE, &windowSize); // set window size
+    SetConsoleScreenBufferSize(wHnd, coord); // set buffer size same as window size
+    ShowScrollBar(consoleWindow, SB_HORZ, 0); // disable scroll bar
+
+    // disable maximize and minimize button
+    SetWindowLong(consoleWindow, GWL_STYLE, GetWindowLong(consoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
+}
+
+// windows related functions end --------------------------------------------------
