@@ -19,7 +19,7 @@
 
 #define RST "\033[0m" // reset colour to default
 
-// save file as .csv as it ediable on excel
+// save file as .csv as it ediable on excel if exist
 #define INVENTORY_FILE "inventory.csv"
 #define RECEIPT_FILE "receipt.csv"
 
