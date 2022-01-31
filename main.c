@@ -394,7 +394,25 @@ void adminRestockInventory(void){
 }
 
 void adminShowSales(void){
-    // TODO: show sales
+    printf("\t\t\t    Restaurant De'Frencher" BR BR);
+    printf("\t        created by " BLUE "Mr. Farez, Mr. Adam " RST "and" BLUE " Mr. Afiq" RST BR BR);
+    printf("---------------------------- sales -----------------------------" BR BR);
+
+    float total_sales = 0; float tax;
+    for (int i = 0; i < receipt_count; i++) total_sales += receipt_list[i].total;
+    printf("receipt count: %d" BR, receipt_count);
+    printf("total expenses: RM %.2f" BR BR, total_sales);
+
+    tax = total_sales * 0.06;
+    printf("total tax: RM %.2f" BR BR, tax);
+
+    printf("total sales: RM %.2f" BR BR, total_sales - tax);
+
+    // sale profit is 30% of total sales
+    printf("total profit: RM %.2f" BR BR, (total_sales - tax) * 0.35);
+
+    getch();
+
 }
 
 // admin functions end --------------------------------------------------------
@@ -437,20 +455,16 @@ int loadReceipt(void){
 
     int count = 0;
     while(fgets(buffer, BUFFER_LENGTH, filePointer)) {
-        if (count == 0){
-            count++; continue; // ignore first line
-        }
 
         buffer[strcspn(buffer, "\n")] = 0;
 
-        receipt_list[count - 1].receipt_number = atoi(strtok(buffer, ","));
-        receipt_list[count - 1].total = atof(strtok(NULL, ","));
-
+        receipt_list[count].receipt_number = atoi(strtok(buffer, ","));
+        receipt_list[count].total = atof(strtok(NULL, ","));
         count++;
     }
 
     fclose(filePointer);
-    return count - 1;
+    return count;
 }
 
 int insertInventory(char inventory_name[], float price, int quantity, int *count){
