@@ -248,10 +248,10 @@ void customerProcess(void){
 
     printf("\t       |------------------------------------------------------|" BR);
     printf("\t       |                                                      |" BR);
-    printf("\t       |  total                                   RM %7.2f  |" BR, total_before);
-    printf("\t       |  2%% of promotion                     [-] RM %7.2f  |" BR, promo);
-    printf("\t       |  6%% tax                              [+] RM %7.2f  |" BR, tax);
-    printf("\t       |  total inc. tax                          RM %7.2f  |" BR, total_price);
+    printf("\t       |  total                                RM %10.2f  |" BR, total_before);
+    printf("\t       |  2%% of promotion                  [-] RM %10.2f  |" BR, promo);
+    printf("\t       |  6%% tax                           [+] RM %10.2f  |" BR, tax);
+    printf("\t       |  total inc. tax                       RM %10.2f  |" BR, total_price);
     printf("\t       |------------------------------------------------------|" BR BR BR);
 
     printf(GREEN "\t\t\t      Thank You eating with us!!" RST BR);
