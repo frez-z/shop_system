@@ -147,7 +147,7 @@ void printInventory(void){
 
     for (int i = 0; i < inventory_count; i++)
         printf("\t\t    | %2d |  %-25s  |   %4d  |" BR , i, inventory_list[i].name, inventory_list[i].quantity);
-
+    printf("\t\t    |--------------------------------------------|" BR);
 }
 
 void adminRestockInventory(void){
