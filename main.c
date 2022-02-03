@@ -72,6 +72,7 @@ int main() {
     
     itemCount = loadInventory(); // load inventory file    
     customerMenu();
+    system("cls");
 }
 
 // admin I/O functions --------------------------------------------------------
@@ -187,7 +188,7 @@ void customerMenu(void){
 
         case 3:adminProcess(); break;
 
-        case 4:system("cls"); exit(0); break; // exit the program
+        case 4: return; break; // exit the program
     }
     customerMenu(); // loop back to start using recursion
 }
