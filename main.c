@@ -23,7 +23,6 @@
 #define RST "\033[0m" // reset colour to default
 
 #define INVENTORY_FILE "inventory.csv" // save file as .csv as it ediable on excel if installed
-#define ITEM_MAX 100 // max number reserved for item
 
 // struct for items
 typedef struct inventory {
@@ -51,8 +50,8 @@ void updateInventory(int id, int change_of_quantity);
 void createConsoleWindow(short width);
 
 // global variables
-inventory itemList[ITEM_MAX];
-int itemCount = 0;
+inventory *itemList;
+int itemCount = 12; // default item count
 int admin_mode = 0;
 
 int main() {
@@ -195,9 +194,8 @@ void customerMenu(void){
 
 void customerProcess(void){
     float total_price = 0;
-    int cart_list[ITEM_MAX];
-    for (int i = 0; i < ITEM_MAX; i++) cart_list[i] = 0; // initialize cart_list to 0
-
+    int *cart_list; // list of item id in cart
+    cart_list = calloc(itemCount, sizeof(int)); // allocate memory for cart list
     customerOder(&cart_list[0]); // select item and add it to cart
 
     // update inventory in the file
@@ -244,7 +242,7 @@ void customerOder(int *cart_list){
 
     for (int index = 0; index < itemCount; index++){
         if (itemList[index].quantity <= 0)
-            printf("\t| %2d |"RED"  %-25s  "RST"|"RED"  RM %-9.2f "RST"|   %4d  |" ,
+            printf("\t| %2d |"RED"  %-25s  "RST"|"RED"    RM %-7.2f "RST"|   %4d  |" ,
             index, itemList[index].name, itemList[index].price, itemList[index].quantity);
         else
             printf("\t| %2d |  %-25s  |    RM %-7.2f |   %4d  |",
@@ -317,14 +315,25 @@ void insertInventory(FILE **fp) {
 int loadInventory(void) {
     FILE* filePointer; int count = -1; char buffer[BUFFER_LENGTH];
 
+    if (itemList != NULL) free(itemList); // free the memory if it's not NULL
+    itemList = (inventory*) calloc(itemCount, sizeof(inventory)); // allocate memory for inventory list
+    if (itemList == NULL) {
+                printf(RED "Error: reallocate memory failed!" RST); getch(); exit(-1);
+    }
+
     filePointer = fopen(INVENTORY_FILE, "r");
 
     while(fgets(buffer, BUFFER_LENGTH, filePointer)) {
         if (count == -1){
             count++; continue; // ignore first line as it is header
         }
-        else if (count >= (ITEM_MAX - 1)){ // if count exceed the max item, break
-            printf(RED "Error: item exceeded max limit" RST BR); getch(); return 0;
+        else if (count >= (itemCount - 1)){ //reallocate more memory to store more items
+
+            // reallocate memory by doubling the size of the array
+            itemList = (inventory*) realloc(itemList, (itemCount*=2) * sizeof(inventory));
+            if (itemList == NULL) {
+                printf(RED "Error: reallocate memory failed!" RST); getch(); exit(-1);
+            }
         }
         
         buffer[strcspn(buffer, "\n")] = 0; // remove newline character
