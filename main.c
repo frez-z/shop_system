@@ -95,7 +95,7 @@ void adminProcess(void){
     }
     for(;;){
         system("cls");
-        printf(BR "\t\t\t\tRestaurant De'Frencher" BR BR);
+        printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
         printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
         printf("\t[1]" CYAN " edit inventory file via external app" RST BR BR);
         printf("\t[2]" CYAN " restock current inventory" RST BR BR);
@@ -132,7 +132,7 @@ void adminProcess(void){
 }
 
 void printInventory(void){
-    printf(BR "\t\t\t\tRestaurant De'Frencher" BR BR);
+    printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t\t    |--------------------------------------------|" BR);
     printf("\t\t    | id |          item name          | on sale |" BR);
@@ -170,7 +170,7 @@ void adminRestockInventory(void){
 
 void customerMenu(void){
     system("cls"); // clear screen
-    printf(BR "\t\t\t\tRestaurant De'Frencher" BR BR);
+    printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t[1]" CYAN " dine in " RST YELLOW "[ unavailable due to Covid-19 ]" RST BR BR);
     printf("\t[2]" CYAN " take away <- " RST GREEN "2%% off"RST CYAN" promotion!" RST BR BR);
@@ -202,7 +202,7 @@ void customerProcess(void){
     for (int i= 0; i < itemCount; i++)
         if (cart_list[i] != 0) updateInventory(i, -cart_list[i]);
 
-    system("cls"); printf(BR "\t\t\t\tRestaurant De'Frencher" BR BR);
+    system("cls"); printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t       |------------------------------------------------------|" BR);
     printf("\t       |          item name          |  unit  |     total     |" BR);
@@ -234,7 +234,7 @@ void customerProcess(void){
 
 void customerOder(int *cart_list){
     system("cls");
-    printf(BR "\t\t\t\tRestaurant De'Frencher" BR BR);
+    printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t|---------------------------------------------------------------------|" BR);
     printf("\t| id |          item name          |     price     | on sale |  cart  |" BR);
@@ -259,8 +259,8 @@ void customerOder(int *cart_list){
     switch (input){
         case 'a':
         {
-            int quantity, id, err_quantity = 0;
-            printf(BR BR"\t"CYAN"[positive quantity] add item"RST BR"\t[negative quantity] remove item" RST BR BR);
+            int quantity, id;
+            printf(BR BR"\t"CYAN"[+] add to cart"RST BR"\t[-] remove from cart" RST BR BR);
             printf("\titem id :"); scanf("%d", &id);
             printf("\tquantity :"); scanf("%d", &quantity);
             int result = customerAddToCart(id, quantity, &cart_list);
@@ -273,7 +273,14 @@ void customerOder(int *cart_list){
             }
             getch(); system("cls"); break;// wait for user to press any key, then clear the screen
         }
-        case 'b': return; break;// return to customerProcess
+        case 'b':
+            int test_sum = 0;
+            for (int i = 0; i < itemCount; i++) test_sum += cart_list[i];
+            if (test_sum == 0){
+                printf(BR BR RED"\tno item in cart!" RST BR BR);
+                getch(); system("cls");
+            } else return; // return to customerProcess
+            break;
     }
     customerOder(cart_list); // recursive call to ensure it's infinity loop.
 }
