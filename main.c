@@ -59,7 +59,6 @@ int main() {
 
     // create file inventory.csv if not exist
     if( access(INVENTORY_FILE, F_OK) != 0 ){
-
         FILE *fp;
         fp = fopen(INVENTORY_FILE, "w");
         if (fp == NULL) exit(1); // error, exit application
@@ -68,7 +67,6 @@ int main() {
         insertInventory(&fp); // insert default inventory
         fclose(fp);
     }
-    
     itemCount = loadInventory(); // load inventory file    
     customerMenu();
     system("cls");
@@ -83,8 +81,7 @@ void adminProcess(void){
 
         char username[20], password[20];
         printf("\t\t\t\tusername :"); scanf("%s", username);
-        printf("\t\t\t\tpassword :"); scanf(" %s", password);
-        printf(RST);
+        printf("\t\t\t\tpassword :"); scanf(" %s", password); printf(RST);
 
         // if the username or password not same, return to main menu
         if (!((strcmp(username, USERNAME) == 0 && strcmp(password, PASSWORD) == 0))) {
@@ -98,35 +95,23 @@ void adminProcess(void){
         printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
         printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
         printf("\t[1]" CYAN " edit inventory file via external app" RST BR BR);
-        printf("\t[2]" CYAN " restock current inventory" RST BR BR);
-        printf("\t[3] return to menu" RST BR BR);
+        printf("\t[2]" CYAN " restock current inventory" RST BR BR); printf("\t[3] return to menu" RST BR BR);
         // error handling. only accept input in range 1 - 4 only
-        int input = 0;
-        while (input > 3 || input <= 0) input = getch() - '0';
+        int input = 0; while (input > 3 || input <= 0) input = getch() - '0';
 
         switch(input){
             case 1:
-                system("cls");
-                printf(BR BR "\t inventory.csv file is vital in this application." BR); 
-                printf("\t corrupted it will cause the app misbehave" BR); 
-                printf("\t ensure no emtpy row between item," BR); 
-                printf("\t not adding new column,"BR); 
-                printf("\t or editing current column name." BR);
-                printf("\t close the external app to continue using this app" BR);
+                system("cls"); printf(BR BR "\t inventory.csv file is important in this application." BR); 
+                printf("\t corrupt it will cause the app misbehave" BR); 
                 printf("\t enter any key to continue...." BR); getch();
-                printf( "\t lauching external app.");
                 system(INVENTORY_FILE); // ask the system to lauch the file.
                 itemCount = loadInventory(); // reloading inventory into application.
-                system("cls");
-                printf(BR BR "\t returned to app, loaded the data" BR);
-                printf("\t press anything to redirect to admin menu" BR); getch();
+                system("cls"); printf("\t press anything to redirect to admin menu" BR); getch();
                 break;
             case 2:
-                adminRestockInventory();
-                break;
+                adminRestockInventory(); break;
             case 3:
-                return;
-                break;
+                return; break;
         }
     }
 }
@@ -154,8 +139,8 @@ void adminRestockInventory(void){
     // invalid id, recall function.
     if (inventory_id > itemCount || inventory_id < 0) adminRestockInventory();
 
-    itemList[inventory_id].quantity += change_of_quantity;
-    updateInventory(inventory_id, change_of_quantity);
+    itemList[inventory_id].quantity += change_of_quantity; // update inventory array
+    updateInventory(inventory_id, change_of_quantity); // update inventory file
 
     system("cls");
     printInventory();
@@ -202,24 +187,23 @@ void customerProcess(void){
     for (int i= 0; i < itemCount; i++)
         if (cart_list[i] != 0) updateInventory(i, -cart_list[i]);
 
-    system("cls"); printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
+    system("cls");
+    printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t       |------------------------------------------------------|" BR);
     printf("\t       |          item name          |  unit  |     total     |" BR);
     printf("\t       |------------------------------------------------------|" BR);
     for (int i = 0; i < itemCount; i++){
         if (cart_list[i] > 0){ // only print non-zero item in cart.
-            
             float items_payment = cart_list[i] * itemList[i].price; // calculate price per item
             printf("\t       |  %-25s  |  %4d  |   RM %-8.2f |" BR, itemList[i].name, cart_list[i], items_payment);
-            
             total_price += items_payment; // add sum of price per item to total whole price
         }
     }
     float total_before = total_price; // copy total price
     float promo = total_price * 0.02; total_price -= promo; // calculate promo deal at 3% off
     float tax = total_price * 0.06; total_price += tax; // calculate tax at 6%
-
+    
     // print the amount user needs to pay
     printf("\t       |------------------------------------------------------|" BR);
     printf("\t       |                                                      |" BR);
@@ -228,40 +212,38 @@ void customerProcess(void){
     printf("\t       |  6%% tax                           [+] RM %10.2f  |" BR, tax);
     printf("\t       |  total inc. tax                       RM %10.2f  |" BR, total_price);
     printf("\t       |------------------------------------------------------|" BR BR BR);
-    printf(GREEN "\t\t\t      Thank You eating with us!!" RST BR);
-    getch();
+    printf(GREEN "\t\t\t      Thank You eating with us!!" RST BR); getch();
 }
 
 void customerOder(int *cart_list){
-    system("cls");
-    printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
+    system("cls"); printf(BR "\t\t\t\t  Restaurant Group 2" BR BR);
     printf("\t\t     created by " BLUE "Mr. Farez, Mr. Adam " RST "and " BLUE "Mr. Afiq" RST BR BR);
     printf("\t|---------------------------------------------------------------------|" BR);
     printf("\t| id |          item name          |     price     | on sale |  cart  |" BR);
     printf("\t|---------------------------------------------------------------------|" BR);
-
-    for (int index = 0; index < itemCount; index++){
+    
+    for (int index = 0; index < itemCount; index++){ // loop through all item in inventory
         if (itemList[index].quantity <= 0)
-            printf("\t| %2d |"RED"  %-25s  "RST"|"RED"    RM %-7.2f "RST"|   %4d  |" ,
+            printf("\t| %2d |"RED"  %-25s  "RST"|"RED"    RM %-7.2f "RST"|   %4d  |" , /* if item is out of stock = RED */
             index, itemList[index].name, itemList[index].price, itemList[index].quantity);
         else
-            printf("\t| %2d |  %-25s  |    RM %-7.2f |   %4d  |",
+            printf("\t| %2d |  %-25s  |    RM %-7.2f |   %4d  |", /* if item is in stock = WHITE */
             index, itemList[index].name, itemList[index].price, itemList[index].quantity);
-
-        if (cart_list[index] == 0) printf("  ----  |"BR);
+        
+        if (cart_list[index] == 0) printf("  ----  |"BR); // if item not in cart, display "----" at cart column
         else printf(BLUE "  %4d  "RST"|"BR, cart_list[index]);
     }
     printf("\t|---------------------------------------------------------------------|" BR BR);
-    printf("\t[a] "CYAN"cart"RST"  [b] "BLUE"checkout" RST);
-    char input;
-    do {input = (char)getch();}while (!(input == 'a' || input == 'b'));
+    printf("\t[a] "CYAN"cart"RST"  [b] "BLUE"checkout" RST BR);
+    
+    // error handling. only accept input in range a - b only
+    char input; do {input = (char)getch();}while (!(input == 'a' || input == 'b'));
 
     switch (input){
-        case 'a':
-        {
+        case 'a': {
             int quantity, id;
-            printf(BR BR"\t"CYAN"[+] add to cart"RST BR"\t[-] remove from cart" RST BR BR);
-            printf("\titem id :"); scanf("%d", &id);
+            printf(BR"\titem id :"); scanf("%d", &id);
+            printf(BR"\t"CYAN"[+] add item"RST BR"\t[-] remove item" RST BR);
             printf("\tquantity :"); scanf("%d", &quantity);
             int result = customerAddToCart(id, quantity, &cart_list);
             switch(result){
@@ -276,10 +258,9 @@ void customerOder(int *cart_list){
         case 'b':
             int test_sum = 0;
             for (int i = 0; i < itemCount; i++) test_sum += cart_list[i];
-            if (test_sum == 0){
-                printf(BR BR RED"\tno item in cart!" RST BR BR);
-                getch(); system("cls");
-            } else return; // return to customerProcess
+            
+            if (test_sum == 0){ printf(BR BR RED"\tno item in cart!" RST BR BR); getch(); system("cls");}
+            else return; // return to customerProcess
             break;
     }
     customerOder(cart_list); // recursive call to ensure it's infinity loop.
@@ -330,6 +311,7 @@ int loadInventory(void) {
 
     filePointer = fopen(INVENTORY_FILE, "r");
 
+    // basically loop through the file and read each line
     while(fgets(buffer, BUFFER_LENGTH, filePointer)) {
         if (count == -1){
             count++; continue; // ignore first line as it is header
@@ -343,8 +325,8 @@ int loadInventory(void) {
             }
         }
         
-        buffer[strcspn(buffer, "\n")] = 0; // remove newline character
-        char* token = strtok(buffer, ",");
+        buffer[strcspn(buffer, "\n")] = 0; // remove newline character at the end of the line
+        char* token = strtok(buffer, ","); // spliting the string by comma
 
         // load file data into struct
         strcpy(itemList[count].name, token);
